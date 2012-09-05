@@ -22,6 +22,11 @@ module SumWear
 
 			# sumwear check each sub directory's contents
 			SumWear.sum_list_dir sub_dir, log_file
+
+			# Flush the buffer from our subdirectory logging
+			log_file.fsync
+
+			# Move back up to root_dir after our subs moved down
 			Dir.chdir '..'
 		end
 
@@ -57,7 +62,11 @@ if not dir_name.match(/.*\/$/)
 	dir_name = dir_name + "\/"
 end
 
+# Create the log
 log_file = SumWear.create_log dir_name
+
+# Sum check the directory recursively
 SumWear.sum_list_dir dir_name, log_file
 
+# Close the log file
 log_file.close
