@@ -1,8 +1,19 @@
-#!/opt/local/bin/ruby1.9
-
+#!/usr/bin/ruby
 
 module SumWear
-	def SumWear.sum_list_dir(root_dir)
+
+	def SumWear.create_log(root_dir)
+
+		# Create the log file name using a timestamp & the path to the directory being checked
+		timestamp = Time.now.to_i.to_s
+		rootpath = root_dir.gsub(/\//, '.')
+		log_file_name =  timestamp + "." + rootpath + "sumlog"
+
+		# Initialize & return the log file
+		return File.new log_file_name, 'w'
+	end
+
+	def SumWear.sum_list_dir(root_dir, log_file)
 		Dir.chdir root_dir
 
 		# First, iterate each sub directory & list its files
@@ -10,11 +21,11 @@ module SumWear
 			#puts sub_dir
 
 			# sumwear check each sub directory's contents
-			SumWear.sum_list_dir sub_dir
+			SumWear.sum_list_dir sub_dir, log_file
 			Dir.chdir '..'
 		end
 
-		puts Dir.pwd
+		log_file.puts "DIR #{Dir.pwd}"
 
 		# Now, iterate each non-directory file & do a checksum
 		Dir['*'].each do |sub_file|
@@ -24,7 +35,7 @@ module SumWear
 			end
 
 			# run a checksum on the file & print the output
-			puts `shasum #{sub_file}`
+			log_file.puts "\t" + `shasum '#{sub_file}'`
 		end
 	end
 end
@@ -36,9 +47,17 @@ if not dir_name = ARGV[0]
 end
 
 # Validate directory exists
-if not Dir.exists? dir_name
+if not File.directory? dir_name
 	puts "'#{dir_name}'' not found or is not a directory"
 	Process.exit
 end
 
-SumWear.sum_list_dir dir_name
+# Make sure we add a / to the end of filename if this is not included
+if not dir_name.match(/.*\/$/)
+	dir_name = dir_name + "\/"
+end
+
+log_file = SumWear.create_log dir_name
+SumWear.sum_list_dir dir_name, log_file
+
+log_file.close
