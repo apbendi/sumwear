@@ -39,8 +39,11 @@ module SumWear
 				next
 			end
 
+			# Replacement string for escaping single quotes to command line
+			repl_str = "\'\\\\'\'"
+
 			# run a checksum on the file & print the output
-			log_file.puts "\t" + `shasum '#{sub_file}'`
+			log_file.puts "\t" + `shasum '#{sub_file.gsub(/\'/, repl_str)}'`
 		end
 	end
 end
